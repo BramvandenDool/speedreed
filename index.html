@@ -67,9 +67,9 @@
 
     function getWordInterval(word, baseInterval) {
       let factor = 1;
-      if (word.length <= 4) factor = 0.5;
-      else if (word.length >= 15) factor = 1.5;
-      else factor = 1 + (word.length - 4) / 20;
+      if (word.length <= 4) factor = 0.8;
+      else if (word.length >= 15) factor = 1.2;
+      else factor = 0.8 + (word.length - 4) / 11 * 0.4;
       return baseInterval * factor;
     }
 
