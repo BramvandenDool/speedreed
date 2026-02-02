@@ -1,0 +1,25 @@
+<body>
+  <div id="rsvp" style="font-size: 4rem; font-family: monospace; color: #0f0;"></div>
+
+  <script>
+    const text = "hello world, im here";
+    const words = text.split(/\s+/);
+    let index = 0;
+    const display = document.getElementById('rsvp');
+    const wpm = 300; // adjust speed (higher = faster)
+    const interval = 60000 / wpm;
+
+    function showNext() {
+      if (index < words.length) {
+        display.textContent = words[index];
+        index++;
+        setTimeout(showNext, interval);
+      } else {
+        display.textContent = "Done!";
+      }
+    }
+
+    // Start on load (or add button later)
+    setTimeout(showNext, 1000); // 1s delay to start
+  </script>
+</body>
