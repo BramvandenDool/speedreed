@@ -83,8 +83,8 @@
     const words = text.split(/\s+/);
     let index = 0;
     const display = document.getElementById('rsvp');
-    let targetWpm = 20;
-    let rampUp = 10; // seconds
+    let targetWpm = 400;
+    let rampUp = 5; // seconds
     let timeoutId = null;
     let isPlaying = false;
     let startTime = null;
@@ -102,13 +102,15 @@
     document.getElementById('wpmInput').addEventListener('input', (e) => { targetWpm = parseInt(e.target.value) || 20; });
     document.getElementById('rampInput').addEventListener('input', (e) => { rampUp = parseInt(e.target.value) || 10; });
 
-    function getCurrentInterval() {
-      if (!startTime || rampUp === 0) return 60000 / targetWpm;
-      const elapsed = (Date.now() - startTime) / 1000;
-      const fraction = Math.min(1, elapsed / rampUp);
-      const currentWpm = 1 + (targetWpm - 1) * fraction;
-      return 60000 / currentWpm;
-    }
+function getCurrentInterval() {
+  if (!startTime || rampUp === 0) return 60000 / targetWpm;
+  const elapsed = (Date.now() - startTime) / 1000;
+  const fraction = Math.min(1, elapsed / rampUp);
+  // Start fast (e.g. 600ms = ~100 WPM), end at target
+  const startInterval = 600;
+  const endInterval   = 60000 / targetWpm;
+  return startInterval + (endInterval - startInterval) * fraction;
+}
 
     function showNext() {
       if (!isPlaying) return;
