@@ -1,25 +1,39 @@
 <body>
-  <div id="rsvp" style="font-size: 4rem; font-family: monospace; color: #0f0;"></div>
+  <div id="rsvp"></div>
 
   <script>
     const text = "hello world, im here";
     const words = text.split(/\s+/);
     let index = 0;
     const display = document.getElementById('rsvp');
-    const wpm = 300; // adjust speed (higher = faster)
+    const wpm = 300;
     const interval = 60000 / wpm;
 
     function showNext() {
-      if (index < words.length) {
-        display.textContent = words[index];
-        index++;
-        setTimeout(showNext, interval);
-      } else {
-        display.textContent = "Done!";
-      }
+      display.textContent = words[index];
+      index = (index + 1) % words.length; // loop
+      setTimeout(showNext, interval);
     }
 
-    // Start on load (or add button later)
-    setTimeout(showNext, 1000); // 1s delay to start
+    // Start immediately
+    showNext();
   </script>
+
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+      display: grid;
+      place-items: center;
+      background: #000;
+    }
+    #rsvp {
+      font-size: 6rem;
+      font-family: monospace;
+      color: #0f0;
+      text-align: center;
+      max-width: 90vw;
+      word-break: break-all;
+    }
+  </style>
 </body>
