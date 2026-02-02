@@ -1,40 +1,132 @@
-<body>
-  <div id="rsvp"></div>
-
-  <script>
-    const text = "hello world, im here";
-    const words = text.split(/\s+/);
-    let index = 0;
-    const display = document.getElementById('rsvp');
-    const wpm = 300;
-    const interval = 60000 / wpm;
-
-    function showNext() {
-      display.textContent = words[index];
-      index = (index + 1) % words.length; // loop
-      setTimeout(showNext, interval);
-    }
-
-    // Start immediately
-    showNext();
-  </script>
-
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RSVP</title>
   <style>
     body {
       margin: 0;
       height: 100vh;
+      display: flex;
+      background: #000;
+      color: #0f0;
+      font-family: monospace;
+    }
+    #main {
+      flex: 1;
       display: grid;
       place-items: center;
-      background: #000;
     }
     #rsvp {
       font-size: 6rem;
-      font-family: 'Courier New', Courier, monospace;
-      color: #0f0;
       text-align: center;
       max-width: 90vw;
       word-break: break-all;
       user-select: none;
+      cursor: default;
+      caret-color: transparent;
+    }
+    #controls {
+      width: 200px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      border-left: 1px solid #0f0;
+    }
+    button {
+      background: #000;
+      color: #0f0;
+      border: 1px solid #0f0;
+      padding: 10px;
+      margin: 5px;
+      cursor: pointer;
+    }
+    .row {
+      display: flex;
+      align-items: center;
+      margin: 10px 0;
+    }
+    input {
+      background: #000;
+      color: #0f0;
+      border: 1px solid #0f0;
+      text-align: center;
+      width: 50px;
+      margin: 0 5px;
     }
   </style>
+</head>
+<body>
+  <div id="main">
+    <div id="rsvp"></div>
+  </div>
+  <div id="controls">
+    <button id="playPause">Play</button>
+    <div class="row">
+      <span>WPM:</span>
+      <button onclick="changeWpm(-10)">-</button>
+      <input id="wpmInput" type="number" value="20" min="1">
+      <button onclick="changeWpm(10)">+</button>
+    </div>
+    <div class="row">
+      <span>Ramp Up (s):</span>
+      <button onclick="changeRamp(-5)">-</button>
+      <input id="rampInput" type="number" value="10" min="0">
+      <button onclick="changeRamp(5)">+</button>
+    </div>
+  </div>
+
+  <script>
+    const text = "The Speed Reading Book: The Revolutionary Approach to Increasing Reading Speed, Comprehension and General Knowledge is a self-help guide by Tony Buzan that presents techniques to dramatically increase reading speed while improving comprehension, retention, and overall knowledge acquisition. [1] Written by the inventor of Mind Mapping and a leading expert on brain potential, the book integrates traditional speed reading methods with insights from contemporary research on the brain's capabilities and eye movements. [2] Buzan demonstrates that reading speeds exceeding 1000 words per minute are achievable with proper training, emphasizing that such advances are supported by an understanding of how the brain and eyes function together. [3] The book offers practical, easy-to-follow approaches to reading, studying, concentration, and learning, including self-help tests to build interest in diverse knowledge areas and tools for measuring progress in speed and comprehension. [1] It positions itself as the first work in the field to draw on the latest discoveries about the brain's astounding potential, providing state-of-the-art techniques suitable for readers at all levels, from basic to advanced. [2] Buzan, whose other bestsellers include The Mind Map Book and Use Both Sides of Your Brain, has lectured worldwide and seen his works translated into multiple languages. [1] The title has appeared in various editions, with a revised third edition published by BBC Books in 2003. [2]";
+    const words = text.split(/\s+/);
+    let index = 0;
+    const display = document.getElementById('rsvp');
+    let targetWpm = 20;
+    let rampUp = 10; // seconds
+    let timeoutId = null;
+    let isPlaying = false;
+    let startTime = null;
+
+    function changeWpm(delta) {
+      targetWpm = Math.max(1, targetWpm + delta);
+      document.getElementById('wpmInput').value = targetWpm;
+    }
+
+    function changeRamp(delta) {
+      rampUp = Math.max(0, rampUp + delta);
+      document.getElementById('rampInput').value = rampUp;
+    }
+
+    document.getElementById('wpmInput').addEventListener('input', (e) => { targetWpm = parseInt(e.target.value) || 20; });
+    document.getElementById('rampInput').addEventListener('input', (e) => { rampUp = parseInt(e.target.value) || 10; });
+
+    function getCurrentInterval() {
+      if (!startTime || rampUp === 0) return 60000 / targetWpm;
+      const elapsed = (Date.now() - startTime) / 1000;
+      const fraction = Math.min(1, elapsed / rampUp);
+      const currentWpm = 1 + (targetWpm - 1) * fraction;
+      return 60000 / currentWpm;
+    }
+
+    function showNext() {
+      if (!isPlaying) return;
+      display.textContent = words[index];
+      index = (index + 1) % words.length;
+      timeoutId = setTimeout(showNext, getCurrentInterval());
+    }
+
+    document.getElementById('playPause').addEventListener('click', () => {
+      isPlaying = !isPlaying;
+      document.getElementById('playPause').textContent = isPlaying ? 'Pause' : 'Play';
+      if (isPlaying) {
+        startTime = Date.now();
+        showNext();
+      } else {
+        clearTimeout(timeoutId);
+      }
+    });
+  </script>
 </body>
+</html>
