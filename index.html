@@ -6,7 +6,8 @@
   <title>RSVP</title>
   <style>
     body { margin:0; height:100vh; display:flex; background:#000; color:#0f0; font-family:monospace; }
-    #main { flex:1; display:grid; place-items:center; }
+    #version { position:absolute; top:10px; left:10px; font-size:0.8rem; }
+    #main { flex:1; display:grid; place-items:center; margin-top:20px; }
     #rsvp { font-size:6rem; text-align:center; max-width:90vw; word-break:break-all; user-select:none; cursor:default; caret-color:transparent; }
     #controls { width:200px; padding:20px; display:flex; flex-direction:column; align-items:center; border-left:1px solid #0f0; }
     button { background:#000; color:#0f0; border:1px solid #0f0; padding:10px; margin:5px; cursor:pointer; }
@@ -15,6 +16,7 @@
   </style>
 </head>
 <body>
+  <div id="version">v1.4 add punctuation</div>
   <div id="main"><div id="rsvp"></div></div>
   <div id="controls">
     <button id="playPause">Play</button>
@@ -70,7 +72,10 @@
       if (word.length <= 4) factor = 0.8;
       else if (word.length >= 15) factor = 1.2;
       else factor = 0.8 + (word.length - 4) / 11 * 0.4;
-      return baseInterval * factor;
+      let punctFactor = 1;
+      const punct = word.match(/[.,;:!?]/);
+      if (punct) punctFactor = 1.5; // 50% pause on punctuation
+      return baseInterval * factor * punctFactor;
     }
 
     function showNext() {
