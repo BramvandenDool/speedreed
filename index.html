@@ -8,7 +8,7 @@
     body { margin:0; height:100vh; display:flex; background:#000; color:#0f0; font-family:monospace; position:relative; }
     #version { position:absolute; top:10px; left:10px; font-size:0.8rem; }
     #main { flex:1; display:grid; place-items:center; }
-    #rsvp { font-size:6rem; text-align:center; max-width:90vw; word-break:break-all; user-select:none; cursor:default; caret-color:transparent; }
+    #rsvp { font-size:6rem; text-align:left; max-width:90vw; word-break:break-all; user-select:none; cursor:default; caret-color:transparent; white-space:pre; }
     #settings { position:fixed; top:10px; right:20px; background:#000; color:#0f0; border:1px solid #0f0; padding:8px 12px; cursor:pointer; }
     #controls { display:none; position:fixed; top:50px; right:20px; background:#000; padding:20px; border:1px solid #0f0; flex-direction:column; align-items:center; z-index:10; }
     .row { display:flex; align-items:center; margin:10px 0; }
@@ -17,7 +17,7 @@
   </style>
 </head>
 <body>
-  <div id="version">v1.4 added external text file loading from GitHub</div>
+  <div id="version">v1.5 default 400 wpm, half pause on comma/period, left align + pad short words</div>
   <div id="main"><div id="rsvp"></div></div>
   <button id="settings">⚙️</button>
   <div id="controls">
@@ -25,7 +25,7 @@
     <div class="row">
       <span>WPM:</span>
       <button onclick="changeWpm(-10)">-</button>
-      <input id="wpmInput" type="number" value="500" min="1">
+      <input id="wpmInput" type="number" value="400" min="1">
       <button onclick="changeWpm(10)">+</button>
     </div>
     <div class="row">
@@ -47,10 +47,10 @@
   </div>
 
   <script>
-    let words = ["The", "Speed", "Reading", "Book"]; // fallback
+    let words = ["The", "Speed", "Reading", "Book"];
     let index = 0;
     const display = document.getElementById('rsvp');
-    let targetWpm = 500;
+    let targetWpm = 400;
     let rampUp = 5;
     let fontSize = 6;
     let timeoutId = null;
@@ -73,7 +73,7 @@
       display.style.fontSize = `${fontSize}rem`;
     }
 
-    document.getElementById('wpmInput').addEventListener('input', e => { targetWpm = parseInt(e.target.value) || 500; });
+    document.getElementById('wpmInput').addEventListener('input', e => { targetWpm = parseInt(e.target.value) || 400; });
     document.getElementById('rampInput').addEventListener('input', e => { rampUp = parseInt(e.target.value) || 5; });
     document.getElementById('fontInput').addEventListener('input', e => { 
       fontSize = parseFloat(e.target.value) || 6; 
@@ -109,15 +109,24 @@
       if (word.length <= 4) factor = 0.8;
       else if (word.length >= 15) factor = 1.2;
       else factor = 0.8 + (word.length - 4) / 11 * 0.4;
+
       let punctFactor = 1;
-      if (word.match(/[.,;:!?]/)) punctFactor = 1.5;
-      return baseInterval * factor * punctFactor;
+      const punct = word.match(/[.,;:!?]/);
+      if (punct) {
+        else punctFactor = 0.25; // others normal extra pause
+      }
+      return baseInterval * factor + punctFactor;
+    }
+
+    function paddedWord(word) {
+      if (word.length % 2 === 1) return ' ' + word;
+      return word;
     }
 
     function showNext() {
       if (!isPlaying) return;
       const word = words[index];
-      display.textContent = word;
+      display.textContent = paddedWord(word);
       index = (index + 1) % words.length;
       const base = getCurrentBaseInterval();
       const interval = getWordInterval(word, base);
