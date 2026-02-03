@@ -17,7 +17,7 @@
   </style>
 </head>
 <body>
-  <div id="version">v1.5 layout change</div>
+  <div id="version">v1.4 added external text file loading from GitHub</div>
   <div id="main"><div id="rsvp"></div></div>
   <button id="settings">⚙️</button>
   <div id="controls">
@@ -40,12 +40,14 @@
       <input id="fontInput" type="number" value="6" min="1" step="0.5">
       <button onclick="changeFont(0.5)">+</button>
     </div>
+    <div class="row">
+      <input id="txtUrl" type="text" placeholder="github raw url" style="width:180px;">
+      <button onclick="loadText()">Load</button>
+    </div>
   </div>
 
   <script>
-    const raw = "The Speed Reading Book: The Revolutionary Approach to Increasing Reading Speed, Comprehension and General Knowledge is a self-help guide by Tony Buzan that presents techniques to dramatically increase reading speed while improving comprehension, retention, and overall knowledge acquisition. Written by the inventor of Mind Mapping and a leading expert on brain potential, the book integrates traditional speed reading methods with insights from contemporary research on the brain's capabilities and eye movements. Buzan demonstrates that reading speeds exceeding 1000 words per minute are achievable with proper training, emphasizing that such advances are supported by an understanding of how the brain and eyes function together. The book offers practical, easy-to-follow approaches to reading, studying, concentration, and learning, including self-help tests to build interest in diverse knowledge areas and tools for measuring progress in speed and comprehension. It positions itself as the first work in the field to draw on the latest discoveries about the brain's astounding potential, providing state-of-the-art techniques suitable for readers at all levels, from basic to advanced. Buzan, whose other bestsellers include The Mind Map Book and Use Both Sides of Your Brain, has lectured worldwide and seen his works translated into multiple languages. The title has appeared in various editions, with a revised third edition published by BBC Books in 2003.";
-    const text = raw.replace(/\[\d+\]/g, '');
-    const words = text.split(/\s+/).filter(w => w.trim() !== '');
+    let words = ["The", "Speed", "Reading", "Book"]; // fallback
     let index = 0;
     const display = document.getElementById('rsvp');
     let targetWpm = 500;
@@ -77,6 +79,22 @@
       fontSize = parseFloat(e.target.value) || 6; 
       display.style.fontSize = `${fontSize}rem`; 
     });
+
+    async function loadText() {
+      const url = document.getElementById('txtUrl').value.trim();
+      if (!url) return;
+      try {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error("Fetch failed");
+        const text = await res.text();
+        const cleaned = text.replace(/\[\d+\]/g, '');
+        words = cleaned.split(/\s+/).filter(w => w.trim() !== '');
+        index = 0;
+        display.textContent = "Loaded. Click to start.";
+      } catch (e) {
+        display.textContent = "Error loading file";
+      }
+    }
 
     function getCurrentBaseInterval() {
       if (!startTime || rampUp === 0) return 60000 / targetWpm;
@@ -117,14 +135,15 @@
     }
 
     document.body.addEventListener('click', (e) => {
-      if (e.target.id !== 'settings' && e.target.closest('#controls') === null) {
+      if (e.target.id !== 'settings' && !e.target.closest('#controls')) {
         togglePlay();
       }
     });
 
     document.getElementById('settings').addEventListener('click', (e) => {
       e.stopPropagation();
-      document.getElementById('controls').style.display = document.getElementById('controls').style.display === 'flex' ? 'none' : 'flex';
+      const ctrl = document.getElementById('controls');
+      ctrl.style.display = ctrl.style.display === 'flex' ? 'none' : 'flex';
     });
 
     document.getElementById('closeSettings').addEventListener('click', () => {
