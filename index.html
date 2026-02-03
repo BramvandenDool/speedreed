@@ -188,14 +188,13 @@ function showNext() {
   if (!isPlaying) return;
 
   let word = words[index];
-  let displayText = paddedWord(word);
+  let displayText = paddedWord(word).trim();
 
-  // If current word is short/common → show next word too
   if (shortWords.has(word.toLowerCase().replace(/[^a-z]/g,''))) {
     const nextIndex = (index + 1) % words.length;
     const nextWord = words[nextIndex];
-    displayText += ' ' + paddedWord(nextWord);
-    index = (nextIndex + 1) % words.length;  // skip next
+    displayText += ' ' + paddedWord(nextWord).trim();
+    index = (nextIndex + 1) % words.length;
   } else {
     index = (index + 1) % words.length;
   }
