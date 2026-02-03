@@ -77,9 +77,9 @@
     let index = 0;
     const display = document.getElementById('rsvp');
     const wordCountEl = document.getElementById('wordCount');
-    let targetWpm = 400;
-    let rampUp = 5;
-    let fontSize = 6;
+    let targetWpm = 360;
+    let rampUp = 1;
+    let fontSize = 4;
     let fontFamily = "monospace";
     let textColor = "#ffffff";
     let timeoutId = null;
@@ -119,10 +119,10 @@
       document.getElementById('settings').style.borderColor = textColor;
     }
 
-    document.getElementById('wpmInput').addEventListener('input', e => { targetWpm = parseInt(e.target.value) || 400; });
-    document.getElementById('rampInput').addEventListener('input', e => { rampUp = parseInt(e.target.value) || 5; });
+    document.getElementById('wpmInput').addEventListener('input', e => { targetWpm = parseInt(e.target.value) || 360; });
+    document.getElementById('rampInput').addEventListener('input', e => { rampUp = parseInt(e.target.value) || 1; });
     document.getElementById('fontInput').addEventListener('input', e => { 
-      fontSize = parseFloat(e.target.value) || 6; 
+      fontSize = parseFloat(e.target.value) || 4; 
       display.style.fontSize = `${fontSize}rem`; 
     });
 
@@ -193,7 +193,10 @@ function showNext() {
   if (shortWords.has(word.toLowerCase().replace(/[^a-z]/g,''))) {
     const nextIndex = (index + 1) % words.length;
     const nextWord = words[nextIndex];
-    displayText += ' ' + paddedWord(nextWord).trim();
+    const combined = word + ' ' + nextWord;
+    const prefixLen = word.length + 1;          // +1 for space
+    const padAfter = ' '.repeat(prefixLen);     // spaces after main word
+    displayText = combined + padAfter;
     index = (nextIndex + 1) % words.length;
   } else {
     index = (index + 1) % words.length;
