@@ -69,8 +69,8 @@
     const display = document.getElementById('rsvp');
     const wordCountEl = document.getElementById('wordCount');
     let targetWpm = 400;
-    let rampUp = 5;
-    let fontSize = 6;
+    let rampUp = 2;
+    let fontSize = 3;
     let fontFamily = "monospace";
     let timeoutId = null;
     let isPlaying = false;
@@ -97,10 +97,10 @@
       display.style.fontFamily = fontFamily;
     }
 
-    document.getElementById('wpmInput').addEventListener('input', e => { targetWpm = parseInt(e.target.value) || 400; });
-    document.getElementById('rampInput').addEventListener('input', e => { rampUp = parseInt(e.target.value) || 5; });
+    document.getElementById('wpmInput').addEventListener('input', e => { targetWpm = parseInt(e.target.value) || 360; });
+    document.getElementById('rampInput').addEventListener('input', e => { rampUp = parseInt(e.target.value) || 2; });
     document.getElementById('fontInput').addEventListener('input', e => { 
-      fontSize = parseFloat(e.target.value) || 6; 
+      fontSize = parseFloat(e.target.value) || 3; 
       display.style.fontSize = `${fontSize}rem`; 
     });
 
