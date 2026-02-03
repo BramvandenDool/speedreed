@@ -10,6 +10,7 @@
     #version { position:absolute; top:10px; left:10px; font-size:0.8rem; }
     #main { flex:1; display:grid; place-items:center; }
     #rsvp { font-size:6rem; text-align:left; max-width:90vw; word-break:break-all; user-select:none; cursor:default; caret-color:transparent; white-space:pre; }
+    #wordCount { position:absolute; bottom:10px; left:10px; font-size:1rem; display:none; }
     #settings { position:fixed; top:10px; right:20px; background:#000; color:#0f0; border:1px solid #0f0; padding:8px 12px; cursor:pointer; }
     #controls { display:none; position:fixed; top:50px; right:20px; background:#000; padding:20px; border:1px solid #0f0; flex-direction:column; align-items:center; z-index:10; }
     .row { display:flex; align-items:center; margin:10px 0; }
@@ -18,8 +19,9 @@
   </style>
 </head>
 <body>
-  <div id="version">v1.6 added font picker: monospace, verdana, bookerly, roboto</div>
+  <div id="version">v1.8 prefill url + jump to word</div>
   <div id="main"><div id="rsvp"></div></div>
+  <div id="wordCount"></div>
   <button id="settings">⚙️</button>
   <div id="controls">
     <button id="closeSettings">Close</button>
@@ -44,15 +46,20 @@
     <div class="row">
       <span>Font:</span>
       <select id="fontSelect" onchange="changeFontFamily()">
-        <option value="monospace">Monospace (current)</option>
+        <option value="monospace">Monospace</option>
         <option value="Verdana, Geneva, sans-serif">Verdana</option>
         <option value="'Bookerly', Georgia, serif">Bookerly</option>
         <option value="Roboto, sans-serif">Roboto</option>
       </select>
     </div>
     <div class="row">
-      <input id="txtUrl" type="text" placeholder="github raw url" style="width:180px;">
+      <input id="txtUrl" type="text" value="https://raw.githubusercontent.com/bramvandendool/speedreed/main/book.txt" placeholder="github raw url" style="width:220px;">
       <button onclick="loadText()">Load</button>
+    </div>
+    <div class="row">
+      <span>Jump to word #:</span>
+      <input id="jumpTo" type="number" min="0" placeholder="0">
+      <button onclick="jump()">Go</button>
     </div>
   </div>
 
@@ -60,6 +67,7 @@
     let words = ["The", "Speed", "Reading", "Book"];
     let index = 0;
     const display = document.getElementById('rsvp');
+    const wordCountEl = document.getElementById('wordCount');
     let targetWpm = 400;
     let rampUp = 5;
     let fontSize = 6;
@@ -104,23 +112,27 @@
         if (!res.ok) throw new Error("Fetch failed");
         const text = await res.text();
         const cleaned = text.replace(/\[\d+\]/g, '');
-        
-        //words = cleaned.split(/\s+/).filter(w => w.trim() !== '');
-
         words = cleaned
-  .replace(/\r\n/g, '\n')                    // normalize CRLF to LF
-  .split(/(\n{2,})/)                         // split on 2+ newlines, keep delimiters
-  .flatMap(part => 
-    part.match(/^\n{2,}$/) 
-      ? ['\n\n']                               // represent paragraph break
-      : part.split(/\s+/).filter(w => w.trim() !== '')
-  )
-  .filter(w => w !== '');
-        
+          .replace(/\r\n/g, '\n')
+          .split(/(\n{2,})/)
+          .flatMap(part =>
+            part.match(/^\n{2,}$/)
+              ? ['\n\n']
+              : part.split(/\s+/).filter(w => w.trim() !== '')
+          )
+          .filter(w => w !== '');
         index = 0;
         display.textContent = "Loaded. Click to start.";
       } catch (e) {
         display.textContent = "Error loading file";
+      }
+    }
+
+    function jump() {
+      const target = parseInt(document.getElementById('jumpTo').value) || 0;
+      if (target >= 0 && target < words.length) {
+        index = target;
+        display.textContent = paddedWord(words[index]);
       }
     }
 
@@ -132,48 +144,50 @@
       return 60000 / currentWpm;
     }
 
-function getWordInterval(word, baseInterval) {
-  let factor = 1;
-  if (word.length <= 4) factor = 0.8;
-  else if (word.length >= 15) factor = 1.2;
-  else factor = 0.8 + (word.length - 4) / 11 * 0.4;
+    function getWordInterval(word, baseInterval) {
+      let factor = 1;
+      if (word.length <= 4) factor = 0.8;
+      else if (word.length >= 15) factor = 1.2;
+      else factor = 0.8 + (word.length - 4) / 11 * 0.4;
 
-  let punctFactor = 1;
-  if (word === '\n\n') {
-    punctFactor = 0.5;          // long pause after paragraph
-  } else if (word.match(/[.,;:!?]/)) {
-    punctFactor = 0.25;          // your current short pause on punctuation
-  }
-
-  return baseInterval * factor + punctFactor;
-}
+      let punctFactor = 1;
+      if (word === '\n\n') {
+        punctFactor = 0.5;
+      } else if (word.match(/[.,;:!?]/)) {
+        punctFactor = 0.25;
+      }
+      return baseInterval * factor * punctFactor;
+    }
 
     function paddedWord(word) {
       if (word.length % 2 === 1) return ' ' + word;
       return word;
     }
 
-function showNext() {
-  if (!isPlaying) return;
-  let word = words[index];
-  if (word === '\n\n') {
-    display.textContent = '   ';   // subtle visual break or leave blank
-  } else {
-    display.textContent = paddedWord(word);
-  }
-  index = (index + 1) % words.length;
-  const base = getCurrentBaseInterval();
-  const interval = getWordInterval(word, base);
-  timeoutId = setTimeout(showNext, interval);
-}
+    function showNext() {
+      if (!isPlaying) return;
+      let word = words[index];
+      if (word === '\n\n') {
+        display.textContent = ' ';
+      } else {
+        display.textContent = paddedWord(word);
+      }
+      index = (index + 1) % words.length;
+      const base = getCurrentBaseInterval();
+      const interval = getWordInterval(word, base);
+      timeoutId = setTimeout(showNext, interval);
+    }
 
     function togglePlay() {
       isPlaying = !isPlaying;
       if (isPlaying) {
         startTime = Date.now();
         showNext();
+        wordCountEl.style.display = 'none';
       } else {
         clearTimeout(timeoutId);
+        wordCountEl.textContent = `Words: ${index} / ${words.length}`;
+        wordCountEl.style.display = 'block';
       }
     }
 
