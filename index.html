@@ -182,19 +182,34 @@
       return word;
     }
 
-    function showNext() {
-      if (!isPlaying) return;
-      let word = words[index];
-      if (word === '\n\n') {
-        display.textContent = ' ';
-      } else {
-        display.textContent = paddedWord(word);
-      }
-      index = (index + 1) % words.length;
-      const base = getCurrentBaseInterval();
-      const interval = getWordInterval(word, base);
-      timeoutId = setTimeout(showNext, interval);
-    }
+const shortWords = new Set(['the','a','an','i','she','he','it','you','we','they','my','your','his','her','its','our','their']);
+
+function showNext() {
+  if (!isPlaying) return;
+
+  let word = words[index];
+  let displayText = paddedWord(word);
+
+  // If current word is short/common → show next word too
+  if (shortWords.has(word.toLowerCase().replace(/[^a-z]/g,''))) {
+    const nextIndex = (index + 1) % words.length;
+    const nextWord = words[nextIndex];
+    displayText += ' ' + paddedWord(nextWord);
+    index = (nextIndex + 1) % words.length;  // skip next
+  } else {
+    index = (index + 1) % words.length;
+  }
+
+  if (word === '\n\n') {
+    display.textContent = ' ';
+  } else {
+    display.textContent = displayText;
+  }
+
+  const base = getCurrentBaseInterval();
+  const interval = getWordInterval(word, base);
+  timeoutId = setTimeout(showNext, interval);
+}
 
     function togglePlay() {
       isPlaying = !isPlaying;
