@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>RSVP</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
   <style>
     body { margin:0; height:100vh; display:flex; background:#000; color:#0f0; font-family:monospace; position:relative; }
     #version { position:absolute; top:10px; left:10px; font-size:0.8rem; }
@@ -13,11 +14,11 @@
     #controls { display:none; position:fixed; top:50px; right:20px; background:#000; padding:20px; border:1px solid #0f0; flex-direction:column; align-items:center; z-index:10; }
     .row { display:flex; align-items:center; margin:10px 0; }
     button { background:#000; color:#0f0; border:1px solid #0f0; padding:10px; cursor:pointer; margin:5px; }
-    input { background:#000; color:#0f0; border:1px solid #0f0; text-align:center; width:50px; margin:0 5px; }
+    input, select { background:#000; color:#0f0; border:1px solid #0f0; text-align:center; width:120px; margin:0 5px; }
   </style>
 </head>
 <body>
-  <div id="version">v1.5 default 400 wpm, half pause on comma/period, left align + pad short words</div>
+  <div id="version">v1.6 added font picker: monospace, verdana, bookerly, roboto</div>
   <div id="main"><div id="rsvp"></div></div>
   <button id="settings">⚙️</button>
   <div id="controls">
@@ -35,10 +36,19 @@
       <button onclick="changeRamp(1)">+</button>
     </div>
     <div class="row">
-      <span>Font (rem):</span>
+      <span>Font size (rem):</span>
       <button onclick="changeFont(-0.5)">-</button>
       <input id="fontInput" type="number" value="6" min="1" step="0.5">
       <button onclick="changeFont(0.5)">+</button>
+    </div>
+    <div class="row">
+      <span>Font:</span>
+      <select id="fontSelect" onchange="changeFontFamily()">
+        <option value="monospace">Monospace (current)</option>
+        <option value="Verdana, Geneva, sans-serif">Verdana</option>
+        <option value="'Bookerly', Georgia, serif">Bookerly</option>
+        <option value="Roboto, sans-serif">Roboto</option>
+      </select>
     </div>
     <div class="row">
       <input id="txtUrl" type="text" placeholder="github raw url" style="width:180px;">
@@ -53,6 +63,7 @@
     let targetWpm = 400;
     let rampUp = 5;
     let fontSize = 6;
+    let fontFamily = "monospace";
     let timeoutId = null;
     let isPlaying = false;
     let startTime = null;
@@ -71,6 +82,11 @@
       fontSize = Math.max(1, fontSize + delta);
       document.getElementById('fontInput').value = fontSize;
       display.style.fontSize = `${fontSize}rem`;
+    }
+
+    function changeFontFamily() {
+      fontFamily = document.getElementById('fontSelect').value;
+      display.style.fontFamily = fontFamily;
     }
 
     document.getElementById('wpmInput').addEventListener('input', e => { targetWpm = parseInt(e.target.value) || 400; });
@@ -104,19 +120,19 @@
       return 60000 / currentWpm;
     }
 
-function getWordInterval(word, baseInterval) {
-  let factor = 1;
-  if (word.length <= 4) factor = 0.8;
-  else if (word.length >= 15) factor = 1.2;
-  else factor = 0.8 + (word.length - 4) / 11 * 0.4;
+    function getWordInterval(word, baseInterval) {
+      let factor = 1;
+      if (word.length <= 4) factor = 0.8;
+      else if (word.length >= 15) factor = 1.2;
+      else factor = 0.8 + (word.length - 4) / 11 * 0.4;
 
-  let punctFactor = 0;
-  if (word.match(/[.,;:!?]/)) {
-    punctFactor = 0.25;     // comma or period → half time
-  }
-
-  return baseInterval * factor + punctFactor;
-}
+      let punctFactor = 1;
+      if (word.match(/[.,;:!?]/)) {
+        if (word.match(/[.,]/)) punctFactor = 0.5;
+        else punctFactor = 1.5;
+      }
+      return baseInterval * factor * punctFactor;
+    }
 
     function paddedWord(word) {
       if (word.length % 2 === 1) return ' ' + word;
