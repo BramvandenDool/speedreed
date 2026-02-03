@@ -28,19 +28,19 @@
     <div class="row">
       <span>WPM:</span>
       <button onclick="changeWpm(-10)">-</button>
-      <input id="wpmInput" type="number" value="400" min="1">
+      <input id="wpmInput" type="number" value="360" min="1">
       <button onclick="changeWpm(10)">+</button>
     </div>
     <div class="row">
       <span>Ramp Up (s):</span>
       <button onclick="changeRamp(-1)">-</button>
-      <input id="rampInput" type="number" value="5" min="0">
+      <input id="rampInput" type="number" value="1" min="0">
       <button onclick="changeRamp(1)">+</button>
     </div>
     <div class="row">
       <span>Font size (rem):</span>
       <button onclick="changeFont(-0.5)">-</button>
-      <input id="fontInput" type="number" value="6" min="1" step="0.5">
+      <input id="fontInput" type="number" value="3" min="1" step="0.5">
       <button onclick="changeFont(0.5)">+</button>
     </div>
     <div class="row">
@@ -79,12 +79,13 @@
     const wordCountEl = document.getElementById('wordCount');
     let targetWpm = 360;
     let rampUp = 1;
-    let fontSize = 4;
+    let fontSize = 3;
     let fontFamily = "monospace";
     let textColor = "#ffffff";
     let timeoutId = null;
     let isPlaying = false;
     let startTime = null;
+    let fontFamily = "Roboto, sans-serif";
 
     function changeWpm(delta) {
       targetWpm = Math.max(1, targetWpm + delta);
@@ -122,7 +123,7 @@
     document.getElementById('wpmInput').addEventListener('input', e => { targetWpm = parseInt(e.target.value) || 360; });
     document.getElementById('rampInput').addEventListener('input', e => { rampUp = parseInt(e.target.value) || 1; });
     document.getElementById('fontInput').addEventListener('input', e => { 
-      fontSize = parseFloat(e.target.value) || 4; 
+      fontSize = parseFloat(e.target.value) || 3; 
       display.style.fontSize = `${fontSize}rem`; 
     });
 
@@ -188,19 +189,19 @@ function showNext() {
   if (!isPlaying) return;
 
   let word = words[index];
-  //let displayText = paddedWord(word).trim();
   let displayText = paddedWord(word).replace(/[\r\n]+/g, '').trim();
 
-  if (shortWords.has(word.toLowerCase().replace(/[^a-z]/g,''))) {
+  if (shortWords.has(word.toLowerCase().replace(/[^a-z]/g, ''))) {
     const nextIndex = (index + 1) % words.length;
-    const nextWord = words[nextIndex];
-    nextWord = paddedWord(nextWord).replace(/[\r\n]+/g, '').trim();
-    const combined = word + ' ' + nextWord;
-    const prefixLen = word.length;          // +1 for space
-    const padAfter = ' '.repeat(prefixLen);     // spaces after main word
+    let nextWord = words[nextIndex];
+    const cleanNext = paddedWord(nextWord).replace(/[\r\n]+/g, '').trim(); // cleaned version for display
+
+    const combined = word + ' ' + cleanNext;
+    const prefixLen = word.length;          // include the space
+    const padAfter = ' '.repeat(prefixLen);
     displayText = combined + padAfter;
-    
-    index = (nextIndex + 1) % words.length;
+
+    index = (nextIndex + 1) % words.length;     // skip next
   } else {
     index = (index + 1) % words.length;
   }
