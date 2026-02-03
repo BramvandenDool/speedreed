@@ -156,7 +156,7 @@
       } else if (word.match(/[.,;:!?]/)) {
         punctFactor = 0.25;
       }
-      return baseInterval * factor * punctFactor;
+      return baseInterval * factor + punctFactor;
     }
 
     function paddedWord(word) {
