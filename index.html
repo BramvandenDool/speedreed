@@ -169,8 +169,8 @@
     function getWordInterval(word, baseInterval) {
       let factor = 1;
       if (word.length <= 4) factor = 0.8;
-      else if (word.length >= 15) factor = 1.2;
-      else factor = 0.8 + (word.length - 4) / 11 * 0.4;
+      else if (word.length >= 15) factor = 1.4;
+      else factor = 0.8 + (word.length - 4) / 11 * 0.6;
       let punctFactor = 1;
       if (word === '\n\n') punctFactor = 0.5;
       else if (word.match(/[.,;:!?]/)) punctFactor = 0.25;
@@ -182,21 +182,24 @@
       return word;
     }
 
-const shortWords = new Set(['the','a','an','i','she','he','it','you','we','they','my','your','his','her','its','our','their']);
+const shortWords = new Set(['the','a','an','i','she','he','it','you','we','they','my','your','his','her','its','our','their','of']);
 
 function showNext() {
   if (!isPlaying) return;
 
   let word = words[index];
-  let displayText = paddedWord(word).trim();
+  //let displayText = paddedWord(word).trim();
+  let displayText = paddedWord(word).replace(/[\r\n]+/g, '').trim();
 
   if (shortWords.has(word.toLowerCase().replace(/[^a-z]/g,''))) {
     const nextIndex = (index + 1) % words.length;
     const nextWord = words[nextIndex];
+    nextWord = paddedWord(nextWord).replace(/[\r\n]+/g, '').trim();
     const combined = word + ' ' + nextWord;
-    const prefixLen = word.length + 1;          // +1 for space
+    const prefixLen = word.length;          // +1 for space
     const padAfter = ' '.repeat(prefixLen);     // spaces after main word
     displayText = combined + padAfter;
+    
     index = (nextIndex + 1) % words.length;
   } else {
     index = (index + 1) % words.length;
