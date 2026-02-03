@@ -126,12 +126,11 @@
       else if (word.length >= 15) factor = 1.2;
       else factor = 0.8 + (word.length - 4) / 11 * 0.4;
 
-      let punctFactor = 1;
+      let punctFactor = 0;
       if (word.match(/[.,;:!?]/)) {
-        if (word.match(/[.,]/)) punctFactor = 0.5;
-        else punctFactor = 1.5;
+        punctFactor = 0.25;
       }
-      return baseInterval * factor * punctFactor;
+      return baseInterval * factor + punctFactor;
     }
 
     function paddedWord(word) {
