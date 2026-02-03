@@ -104,7 +104,19 @@
         if (!res.ok) throw new Error("Fetch failed");
         const text = await res.text();
         const cleaned = text.replace(/\[\d+\]/g, '');
-        words = cleaned.split(/\s+/).filter(w => w.trim() !== '');
+        
+        //words = cleaned.split(/\s+/).filter(w => w.trim() !== '');
+
+        words = cleaned
+  .replace(/\r\n/g, '\n')                    // normalize CRLF to LF
+  .split(/(\n{2,})/)                         // split on 2+ newlines, keep delimiters
+  .flatMap(part => 
+    part.match(/^\n{2,}$/) 
+      ? ['\n\n']                               // represent paragraph break
+      : part.split(/\s+/).filter(w => w.trim() !== '')
+  )
+  .filter(w => w !== '');
+        
         index = 0;
         display.textContent = "Loaded. Click to start.";
       } catch (e) {
@@ -120,33 +132,40 @@
       return 60000 / currentWpm;
     }
 
-    function getWordInterval(word, baseInterval) {
-      let factor = 1;
-      if (word.length <= 4) factor = 0.8;
-      else if (word.length >= 15) factor = 1.2;
-      else factor = 0.8 + (word.length - 4) / 11 * 0.4;
+function getWordInterval(word, baseInterval) {
+  let factor = 1;
+  if (word.length <= 4) factor = 0.8;
+  else if (word.length >= 15) factor = 1.2;
+  else factor = 0.8 + (word.length - 4) / 11 * 0.4;
 
-      let punctFactor = 0;
-      if (word.match(/[.,;:!?]/)) {
-        punctFactor = 0.25;
-      }
-      return baseInterval * factor + punctFactor;
-    }
+  let punctFactor = 1;
+  if (word === '\n\n') {
+    punctFactor = 0.5;          // long pause after paragraph
+  } else if (word.match(/[.,;:!?]/)) {
+    punctFactor = 0.25;          // your current short pause on punctuation
+  }
+
+  return baseInterval * factor + punctFactor;
+}
 
     function paddedWord(word) {
       if (word.length % 2 === 1) return ' ' + word;
       return word;
     }
 
-    function showNext() {
-      if (!isPlaying) return;
-      const word = words[index];
-      display.textContent = paddedWord(word);
-      index = (index + 1) % words.length;
-      const base = getCurrentBaseInterval();
-      const interval = getWordInterval(word, base);
-      timeoutId = setTimeout(showNext, interval);
-    }
+function showNext() {
+  if (!isPlaying) return;
+  let word = words[index];
+  if (word === '\n\n') {
+    display.textContent = '   ';   // subtle visual break or leave blank
+  } else {
+    display.textContent = paddedWord(word);
+  }
+  index = (index + 1) % words.length;
+  const base = getCurrentBaseInterval();
+  const interval = getWordInterval(word, base);
+  timeoutId = setTimeout(showNext, interval);
+}
 
     function togglePlay() {
       isPlaying = !isPlaying;
