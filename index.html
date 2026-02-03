@@ -104,19 +104,19 @@
       return 60000 / currentWpm;
     }
 
-    function getWordInterval(word, baseInterval) {
-      let factor = 1;
-      if (word.length <= 4) factor = 0.8;
-      else if (word.length >= 15) factor = 1.2;
-      else factor = 0.8 + (word.length - 4) / 11 * 0.4;
+function getWordInterval(word, baseInterval) {
+  let factor = 1;
+  if (word.length <= 4) factor = 0.8;
+  else if (word.length >= 15) factor = 1.2;
+  else factor = 0.8 + (word.length - 4) / 11 * 0.4;
 
-      let punctFactor = 1;
-      const punct = word.match(/[.,;:!?]/);
-      if (punct) {
-        else punctFactor = 0.25; // others normal extra pause
-      }
-      return baseInterval * factor + punctFactor;
-    }
+  let punctFactor = 0;
+  if (word.match(/[.,;:!?]/)) {
+    punctFactor = 0.25;     // comma or period → half time
+  }
+
+  return baseInterval * factor + punctFactor;
+}
 
     function paddedWord(word) {
       if (word.length % 2 === 1) return ' ' + word;
